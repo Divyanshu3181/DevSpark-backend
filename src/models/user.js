@@ -49,9 +49,15 @@ const userSchema = new mongoose.Schema({
         }
         
     },
+    location: {
+        type: String,
+    },
     photoUrl: {
         type: String,
         default: "https://t4.ftcdn.net/jpg/09/64/89/19/360_F_964891988_aeRrD7Ee7IhmKQhYkCrkrfE6UHtILfPp.jpg",
+    },
+    githubUrl: {
+        type: String,
     },
     about: {
         type: String,

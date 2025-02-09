@@ -13,9 +13,8 @@ const http = require("http");
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // For local development
-      "https://dev-spark-web.vercel.app", // Your main Vercel domain
-      "https://dev-spark-9kta060t2-divyanshu3181s-projects.vercel.app", // Vercel preview deployment
+      "http://localhost:5173", 
+      "https://dev-spark-9kta060t2-divyanshu3181s-projects.vercel.app",
     ],
     credentials: true,
   })

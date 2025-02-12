@@ -50,6 +50,11 @@ paymentRouter.post("/payment/create", userAuth, async (req, res) => {
 
 paymentRouter.post("/payment/webhook", async (req, res) => {
     try {
+        console.log("Webhook received:", {
+            event: req.body.event,
+            payload: req.body.payload
+        });
+
         const webhookSignature = req.get("X-Razorpay-Signature");
 
         const isWebhookVaid = validateWebhookSignature(
@@ -59,21 +64,27 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
         );
 
         if(!isWebhookVaid) {
+            console.log("Invalid webhook signature");
             return res.status(400).json({ msg: "Webhook signature is invalid" });
         }
 
         // Update payment status in DB
         const paymentDetails = req.body.payload.payment.entity;
+        console.log("Payment details:", paymentDetails);
+        
         const payment = await Payment.findOne({ orderId: paymentDetails.order_id });
         if (!payment) {
+            console.log("Payment not found for order_id:", paymentDetails.order_id);
             return res.status(404).json({ msg: "Payment not found" });
         }
+        console.log("Found payment:", payment);
         
         payment.status = paymentDetails.status;
         await payment.save();
 
         // Only update user premium status if payment is successful
         if(req.body.event === "payment.captured") {
+            console.log("Payment captured, updating user premium status");
             const user = await User.findOneAndUpdate(
                 { _id: payment.userId },
                 { 
@@ -83,9 +94,12 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
                 { new: true }
             );
             if (!user) {
+                console.log("User not found for userId:", payment.userId);
                 return res.status(404).json({ msg: "User not found" });
             }
+            console.log("Updated user:", user);
         } else if(req.body.event === "payment.failed") {
+            console.log("Payment failed, updating user status");
             const user = await User.findOneAndUpdate(
                 { _id: payment.userId },
                 { 
@@ -95,8 +109,12 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
                 { new: true }
             );
             if (!user) {
+                console.log("User not found for userId:", payment.userId);
                 return res.status(404).json({ msg: "User not found" });
             }
+            console.log("Updated user:", user);
+        } else {
+            console.log("Unhandled webhook event:", req.body.event);
         }
 
         return res.status(200).json({ msg: "Webhook received successfully" });

@@ -56,12 +56,29 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
         });
 
         const webhookSignature = req.get("X-Razorpay-Signature");
+        console.log("Received webhook signature:", webhookSignature);
+        
+        // Log the exact data being used for signature validation
+        const webhookBody = JSON.stringify(req.body);
+        const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        console.log("Webhook body for validation:", webhookBody);
+        console.log("Webhook secret first 4 chars:", webhookSecret ? webhookSecret.substring(0, 4) : "null");
 
-        const isWebhookVaid = validateWebhookSignature(
-            JSON.stringify(req.body), 
-            webhookSignature, 
-            process.env.RAZORPAY_WEBHOOK_SECRET
-        );
+        let isWebhookVaid = false;
+        try {
+            isWebhookVaid = validateWebhookSignature(
+                webhookBody,
+                webhookSignature,
+                webhookSecret
+            );
+            console.log("Signature validation result:", isWebhookVaid);
+        } catch (signatureError) {
+            console.error("Signature validation error details:", {
+                error: signatureError.message,
+                stack: signatureError.stack
+            });
+            return res.status(400).json({ msg: "Webhook signature validation error" });
+        }
 
         if(!isWebhookVaid) {
             console.log("Invalid webhook signature");

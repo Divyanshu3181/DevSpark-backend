@@ -52,6 +52,13 @@ const userSchema = new mongoose.Schema({
     location: {
         type: String,
     },
+    isPremium: {
+        type: Boolean,
+        default: false,
+    },
+    membershipType: {
+        type: String
+    },
     photoUrl: {
         type: String,
         default: "https://t4.ftcdn.net/jpg/09/64/89/19/360_F_964891988_aeRrD7Ee7IhmKQhYkCrkrfE6UHtILfPp.jpg",
@@ -75,7 +82,7 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.getJWT = async function () {
     const user = this;
 
-    const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$9752", {expiresIn: "1d"});
+    const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {expiresIn: "1d"});
 
     return token;
 };
